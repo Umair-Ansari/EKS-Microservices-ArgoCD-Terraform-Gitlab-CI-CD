@@ -293,3 +293,29 @@ resource "aws_route_table_association" "l3_private_rtb_subnet_association" {
   route_table_id = aws_route_table.l3_private_rtb[count.index].id
 
 }
+
+########## SSH KEY ##########
+
+resource "tls_private_key" "infra_pk" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "infra_kp" {
+  key_name   = "infra"       # Create "infra" to AWS!!
+  public_key = tls_private_key.infra_pk.public_key_openssh
+
+  provisioner "local-exec" { # Create "infra.pem" to your computer!!
+    command = "echo '${tls_private_key.infra_pk.private_key_pem}' > ./infra.pem"
+  }
+}
+
+########## OUTPUT VALUES ##########
+
+output "subnet_ids" {
+  value = aws_subnet.subnets[*]
+}
+
+output "infra-ssh-key" {
+  value = aws_key_pair.infra_kp
+}
