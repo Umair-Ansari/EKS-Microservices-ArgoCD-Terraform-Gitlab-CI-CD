@@ -58,3 +58,4 @@ variable "l2_subnets_cidr" {
   type    = list(number)
   default = [1, 2, 5, 6 ,9,10]
 }
+

@@ -1,8 +1,7 @@
-
 terraform {
     backend "s3" {
-      bucket                  = "s3_bucket_name"
-      dynamodb_table          = "terraform-lock-core-infra"
+      bucket                  = "sac-stg-terraform-stage"
+      dynamodb_table          = "terraform-lock"
       key                     = "core-infra"
       region                  = "me-central-1"
     }
@@ -271,6 +270,55 @@ resource "aws_network_acl_rule" "umair-l3-out" {
   to_port        = 22
 }
 
+
+############### Allow All Traffic to L1 Subnets ############
+resource "aws_network_acl_rule" "umair-l1-all-in" {
+  network_acl_id = aws_network_acl.umair-l1.id
+  rule_number    = 100
+  egress         = false
+  protocol       = "all"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 22
+  to_port        = 22
+}
+
+resource "aws_network_acl_rule" "umair-l1-all-out" {
+  network_acl_id = aws_network_acl.umair-l1.id
+  rule_number    = 100
+  egress         = true
+  protocol       = "all"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 22
+  to_port        = 22
+}
+
+
+
+############### Allow All Traffic to L2 Subnets ############
+resource "aws_network_acl_rule" "umair-l2-all-in" {
+  network_acl_id = aws_network_acl.umair-l2.id
+  rule_number    = 100
+  egress         = false
+  protocol       = "all"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 22
+  to_port        = 22
+}
+
+resource "aws_network_acl_rule" "umair-l2-all-out" {
+  network_acl_id = aws_network_acl.umair-l2.id
+  rule_number    = 100
+  egress         = true
+  protocol       = "all"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 22
+  to_port        = 22
+}
+
 ########## Route Table Association ##########
 resource "aws_route_table_association" "public_rtb_subnet_association" {
   count = length(var.l1_subnets_cidr)
@@ -310,6 +358,35 @@ resource "aws_key_pair" "infra_kp" {
   }
 }
 
+########## SSH SG ##########
+
+resource "aws_security_group" "allow_ssh" {
+  name        = "allow_ssh"
+  description = "Allow SSH inbound traffic"
+  vpc_id      = aws_vpc.vpc.id
+
+  ingress {
+    description      = "SSH from Public"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "allow_tls"
+  }
+}
+
 ########## OUTPUT VALUES ##########
 
 output "subnet_ids" {
@@ -318,4 +395,12 @@ output "subnet_ids" {
 
 output "infra-ssh-key" {
   value = aws_key_pair.infra_kp
+}
+
+output "infra-ssh-sg" {
+  value = aws_security_group.allow_ssh
+}
+
+output "vpc" {
+  value = aws_vpc.vpc
 }
