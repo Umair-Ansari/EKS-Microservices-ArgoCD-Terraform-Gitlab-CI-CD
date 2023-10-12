@@ -1,6 +1,6 @@
 terraform {
     backend "s3" {
-      bucket                  = "sac-stg-terraform-stage"
+      bucket                  = "your-s3-bucket"
       dynamodb_table          = "terraform-lock"
       key                     = "core-infra"
       region                  = "me-central-1"
