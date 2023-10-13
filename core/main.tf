@@ -3,6 +3,7 @@ module "vpc" {
   source = "./infra"
 }
 
+
 ########## Create Gitlab Server ##########
 module "gitlab" {
   source = "./projects/gitlab"
@@ -12,8 +13,8 @@ module "gitlab" {
   gitlab_subdomain = "gitlab-ci"
   vpc = module.vpc.vpc
   l1_subnets = [module.vpc.subnet_ids[0].id, module.vpc.subnet_ids[4].id, module.vpc.subnet_ids[8].id]
+  allow_ssh_sg = module.vpc.infra-ssh-sg.id
 }
-
 
 ########## Create Jump Server ##########
 module "jump-host" {

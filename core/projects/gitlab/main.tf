@@ -48,7 +48,7 @@ resource "aws_security_group" "gitlab-ec2" {
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
-    security_groups  = [aws_security_group.gitlab-alb.id]
+    security_groups  = [aws_security_group.gitlab-alb.id, var.allow_ssh_sg]
   }
 
   egress {
@@ -139,6 +139,8 @@ resource "aws_lb_listener" "gitlab" {
   load_balancer_arn = aws_lb.gitlab.arn
   port              = "80"
   protocol          = "HTTP"
+#  ssl_policy        = "ELBSecurityPolicy-2016-08"
+#  certificate_arn   = "arn:aws:iam::id:server-certificate/test_cert_rhftfyfyy
 
   default_action {
     type             = "forward"
@@ -146,31 +148,16 @@ resource "aws_lb_listener" "gitlab" {
   }
 }
 
-#resource "aws_lb_listener" "gitlab" {
-#  load_balancer_arn = aws_lb.gitlab.arn
-#  port              = "443"
-#  protocol          = "HTTPs"
-#  ssl_policy        = "ELBSecurityPolicy-2016-08"
-#  certificate_arn   = "arn:aws:iam::id:server-certificate/test_cert_rhftfyfyy
-
-#  default_action {
-#    type             = "forward"
-#    target_group_arn = aws_lb_target_group.gitlab-tg.arn
-#  }
-#}
-
 ################ R53 ################
 data "aws_route53_zone" "r53" {
-  name = "muhammadumair.com"
+  name = "sac-stg.org"
 }
 
 
 resource "aws_route53_record" "gitlab-ci" {
   zone_id = data.aws_route53_zone.r53.zone_id
-  name    = "gitlab-ci.muhammadumair.com"
+  name    = "gitlab-ci.sac-stg.org"
   type    = "CNAME"
   ttl     = "60"
   records = [aws_lb.gitlab.dns_name]  # Replace with your actual IP address
 }
-
-
